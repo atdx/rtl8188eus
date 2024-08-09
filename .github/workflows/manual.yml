@@ -1,0 +1,47 @@
+name: Build RTL8188eus Driver for OpenWRT 23.05.4 (armsr/armv8)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up OpenWRT SDK
+      run: |
+        wget https://downloads.openwrt.org/releases/23.05.4/targets/armsr/armv8/openwrt-sdk-23.05.4-armsr-armv8_gcc-12.3.0_musl_eabi.Linux-x86_64.tar.xz
+        tar -xf openwrt-sdk-23.05.4-armsr-armv8_gcc-12.3.0_musl_eabi.Linux-x86_64.tar.xz
+        mv openwrt-sdk-23.05.4-armsr-armv8 OpenWRT-SDK
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libncurses5-dev gawk git gettext unzip zlib1g-dev file python3
+
+    - name: Clone rtl8188eus driver
+      run: |
+        git clone https://github.com/aircrack-ng/rtl8188eus.git rtl8188eus-driver
+
+    - name: Prepare OpenWRT SDK
+      run: |
+        cd OpenWRT-SDK
+        ./scripts/feeds update -a
+        ./scripts/feeds install kmod-usb-core kmod-usb2 kmod-usb-ohci kmod-usb-uhci kmod-usb-hid kmod-usb-net kmod-usb-net-rtl8152
+        cp -r ../rtl8188eus-driver package/rtl8188eus
+        echo "CONFIG_PACKAGE_kmod-rtl8188eu=m" >> .config
+        make defconfig
+
+    - name: Build driver
+      run: |
+        cd OpenWRT-SDK
+        make package/rtl8188eus/compile V=s
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: rtl8188eus-driver
+        path: OpenWRT-SDK/bin/packages/armsr/base/kmod-rtl8188eu_*.ipk
