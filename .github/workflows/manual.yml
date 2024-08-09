@@ -15,6 +15,7 @@ jobs:
       run: |
         wget https://mirror-03.infra.openwrt.org/releases/23.05.4/targets/armsr/armv8/openwrt-sdk-23.05.4-armsr-armv8_gcc-12.3.0_musl.Linux-x86_64.tar.xz
         tar -xf openwrt-sdk-23.05.4-armsr-armv8_gcc-12.3.0_musl.Linux-x86_64.tar.xz
+        ls -l
         mv openwrt-sdk-23.05.4-armsr-armv8 OpenWRT-SDK
 
     - name: Install dependencies
